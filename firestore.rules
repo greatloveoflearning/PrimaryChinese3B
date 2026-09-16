@@ -1,0 +1,153 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() {
+      return request.auth != null;
+    }
+
+    function isBanned() {
+      return authed() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("banned", false) == true;
+    }
+
+    // Banned members are treated as signed out everywhere: every rule below
+    // gates on isSignedIn(), so a ban immediately cuts off all reads/writes
+    // regardless of subscription status.
+    function isSignedIn() {
+      return authed() && !isBanned();
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function canHost() {
+      return isSignedIn() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("canHost", false) == true
+      );
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      // isAdmin can only be granted by hand in the Firebase console (the
+      // Admin SDK bypasses rules); no client write may change it.
+      // canHost, unlockedUntil (subscription expiry, epoch ms), and banned
+      // may only be changed by an existing admin.
+      allow create: if isSignedIn() && request.auth.uid == uid &&
+        request.resource.data.get("isAdmin", false) != true &&
+        request.resource.data.get("canHost", false) != true &&
+        request.resource.data.get("banned", false) != true &&
+        request.resource.data.get("unlockedUntil", null) == null;
+      allow update: if isSignedIn() && (
+        (request.auth.uid == uid &&
+          request.resource.data.get("isAdmin", false) == resource.data.get("isAdmin", false) &&
+          request.resource.data.get("canHost", false) == resource.data.get("canHost", false) &&
+          request.resource.data.get("banned", false) == resource.data.get("banned", false) &&
+          request.resource.data.get("unlockedUntil", null) == resource.data.get("unlockedUntil", null)) ||
+        (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["canHost", "unlockedUntil", "banned", "suspiciousFlaggedAt", "suspiciousCardCount"]))
+      );
+    }
+
+    match /leads/{leadId} {
+      allow read, update, delete: if isAdmin();
+      // Signed-in members submit with their own uid (paywall's "can't e-Transfer"
+      // form); anonymous marketing-page visitors submit with uid left null;
+      // admins can also add rows by hand from the Report tab.
+      allow create: if isAdmin() ||
+        (isSignedIn() && request.resource.data.uid == request.auth.uid) ||
+        (!isSignedIn() && request.resource.data.get("uid", null) == null);
+    }
+
+    match /classInterest/{docId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin() ||
+        (isSignedIn() && request.resource.data.uid == request.auth.uid) ||
+        (!isSignedIn() && request.resource.data.get("uid", null) == null);
+    }
+
+    match /activity/{eventId} {
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /scores/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /lessonStats/{lessonId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /typingTestStats/{articleId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /typingArticlesMeta/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /typingArticleContent/{articleId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /vocabData/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /lessonMatchBest/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    match /lessonPracticeCompletions/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    match /wrongWords/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /assessmentBest/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && canHost() && request.resource.data.hostUid == request.auth.uid &&
+        request.resource.data.status == "lobby";
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.hostUid ||
+        (resource.data.status == "running" && request.resource.data.status == "finished" &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status"]))
+      );
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.hostUid;
+
+      match /players/{uid} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.score == 0;
+        allow update: if isSignedIn() && request.auth.uid == uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(["score", "answered", "lastAnswerAt", "answerLog"]);
+        allow delete: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+  }
+}

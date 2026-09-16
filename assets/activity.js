@@ -1,0 +1,440 @@
+(function () {
+  "use strict";
+
+  const { db, sdk } = window.vocabFirebase;
+
+  // ---------- suspicious-speed detection (possible scripted/automated scraping) ----------
+
+  const EMAILJS_PUBLIC_KEY = "LbKAsrtMyqprI-325";
+  const EMAILJS_SERVICE_ID = "service_1ndcjng";
+  const EMAILJS_TEMPLATE_ID = "template_opzyaej";
+  if (window.emailjs) window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  const SUSPICIOUS_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+  const SUSPICIOUS_CARD_THRESHOLD = 80;
+  const RE_ALERT_COOLDOWN_MS = 24 * 60 * 60 * 1000; // don't re-email for the same member more than once/day
+
+  let eliminateTimestamps = [];
+  let alertSentThisSession = false;
+
+  async function maybeFlagSuspiciousSpeed(user) {
+    const now = Date.now();
+    eliminateTimestamps.push(now);
+    eliminateTimestamps = eliminateTimestamps.filter((t) => now - t <= SUSPICIOUS_WINDOW_MS);
+    if (eliminateTimestamps.length < SUSPICIOUS_CARD_THRESHOLD || alertSentThisSession) return;
+    alertSentThisSession = true;
+
+    const cardCount = eliminateTimestamps.length;
+    const userRef = sdk.doc(db, "users", user.uid);
+    let alreadyFlaggedRecently = false;
+    let displayName = user.displayName || user.email || "Unknown";
+    try {
+      const snap = await sdk.getDoc(userRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        displayName = data.displayName || displayName;
+        alreadyFlaggedRecently =
+          !!data.suspiciousFlaggedAt && now - data.suspiciousFlaggedAt < RE_ALERT_COOLDOWN_MS;
+      }
+      await sdk.updateDoc(userRef, { suspiciousFlaggedAt: now, suspiciousCardCount: cardCount });
+    } catch (e) {
+      /* offline or permission issue: skip the email too if we couldn't confirm */
+      return;
+    }
+
+    if (alreadyFlaggedRecently || !window.emailjs) return;
+    window.emailjs
+      .send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        member_name: displayName,
+        member_email: user.email || "",
+        card_count: String(cardCount),
+        time_window: "10 minutes",
+        detected_at: new Date().toLocaleString(),
+      })
+      .catch(() => {
+        /* best-effort notification; a failed send shouldn't break the app */
+      });
+  }
+
+  function matchGamePoints(pairs, seconds) {
+    const timePerPair = seconds / pairs;
+    let speedBonus = 0;
+    if (timePerPair <= 3) speedBonus = pairs * 2;
+    else if (timePerPair <= 6) speedBonus = pairs;
+    return pairs + speedBonus;
+  }
+
+  function touchLessonStats(lesson, uid) {
+    if (lesson === "all" || lesson === undefined || lesson === null) return;
+    sdk.setDoc(sdk.doc(db, "lessonStats", String(lesson)), { learners: sdk.arrayUnion(uid) }, { merge: true });
+  }
+
+  function lessonKey(lesson) {
+    return lesson === "all" || lesson === "mistakes" ? lesson : Number(lesson);
+  }
+
+  async function updateLessonMatchBest(lesson, uid, displayName, pairs, seconds) {
+    const key = lessonKey(lesson);
+    const secondsPerPair = seconds / pairs;
+    const ref = sdk.doc(db, "lessonMatchBest", `${key}_${uid}`);
+    let completions = 1;
+    try {
+      await sdk.runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : null;
+        completions = (data && data.completions ? data.completions : 0) + 1;
+        const isNewBest = !data || data.secondsPerPair > secondsPerPair;
+        tx.set(
+          ref,
+          {
+            uid,
+            displayName,
+            lesson: key,
+            completions,
+            ...(isNewBest ? { bestSeconds: seconds, bestPairs: pairs, secondsPerPair } : {}),
+            updatedAt: sdk.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+    } catch (e) {
+      /* offline or permission issue */
+    }
+    return completions;
+  }
+
+  async function recordEliminate(card) {
+    const user = window.vocabAuth.getUser();
+    if (!user) return;
+
+    const scoreRef = sdk.doc(db, "scores", user.uid);
+    let isNew = false;
+    try {
+      await sdk.runTransaction(db, async (tx) => {
+        const snap = await tx.get(scoreRef);
+        const data = snap.exists() ? snap.data() : {};
+        const masteredIds = new Set(data.masteredIds || []);
+        if (masteredIds.has(card.id)) return;
+        isNew = true;
+        masteredIds.add(card.id);
+        const masteredCount = masteredIds.size;
+        const matchPoints = data.matchPoints || 0;
+        const assessmentPoints = data.assessmentPoints || 0;
+        tx.set(
+          scoreRef,
+          {
+            displayName: user.displayName || user.email,
+            masteredIds: Array.from(masteredIds),
+            masteredCount,
+            matchPoints,
+            assessmentPoints,
+            totalScore: masteredCount + matchPoints + assessmentPoints,
+            updatedAt: sdk.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+    } catch (e) {
+      /* offline or permission issue: activity is still logged below */
+    }
+
+    sdk.addDoc(sdk.collection(db, "activity"), {
+      uid: user.uid,
+      type: "eliminate",
+      lesson: card.lesson,
+      hanzi: card.hanzi,
+      cardId: card.id,
+      points: isNew ? 1 : 0,
+      createdAt: sdk.serverTimestamp(),
+    });
+
+    touchLessonStats(card.lesson, user.uid);
+    if (isNew) maybeFlagSuspiciousSpeed(user);
+  }
+
+  async function getLessonMatchStanding(lesson, uid) {
+    try {
+      const q = sdk.query(
+        sdk.collection(db, "lessonMatchBest"),
+        sdk.where("lesson", "==", lessonKey(lesson)),
+        sdk.orderBy("secondsPerPair", "asc")
+      );
+      const snap = await sdk.getDocs(q);
+      const all = [];
+      snap.forEach((docSnap) => all.push(docSnap.data()));
+      const total = all.length;
+      const rank = all.findIndex((d) => d.uid === uid) + 1;
+      const others = all.filter((d) => d.uid !== uid);
+      const mine = all.find((d) => d.uid === uid);
+      const beaten = mine ? others.filter((d) => d.secondsPerPair > mine.secondsPerPair).length : 0;
+      const percentile = others.length > 0 ? Math.round((beaten / others.length) * 100) : null;
+      return { total, rank: rank || null, percentile, leaderboard: all.slice(0, 5) };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function recordMatchComplete(lesson, pairs, seconds) {
+    const user = window.vocabAuth.getUser();
+    if (!user) return null;
+
+    const points = matchGamePoints(pairs, seconds);
+    const displayName = user.displayName || user.email;
+
+    sdk.addDoc(sdk.collection(db, "activity"), {
+      uid: user.uid,
+      type: "match_complete",
+      lesson: lesson,
+      pairs,
+      seconds,
+      points,
+      createdAt: sdk.serverTimestamp(),
+    });
+
+    touchLessonStats(lesson, user.uid);
+    const completions = await updateLessonMatchBest(lesson, user.uid, displayName, pairs, seconds);
+    const standing = await getLessonMatchStanding(lesson, user.uid);
+
+    const scoreRef = sdk.doc(db, "scores", user.uid);
+    try {
+      await sdk.runTransaction(db, async (tx) => {
+        const snap = await tx.get(scoreRef);
+        const data = snap.exists() ? snap.data() : {};
+        const masteredCount = data.masteredCount || 0;
+        const matchPoints = (data.matchPoints || 0) + points;
+        const assessmentPoints = data.assessmentPoints || 0;
+        tx.set(
+          scoreRef,
+          {
+            displayName,
+            masteredIds: data.masteredIds || [],
+            masteredCount,
+            matchPoints,
+            assessmentPoints,
+            totalScore: masteredCount + matchPoints + assessmentPoints,
+            updatedAt: sdk.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+    } catch (e) {
+      /* offline or permission issue: activity is already logged, score sync can lag */
+    }
+
+    return { points, completions, standing };
+  }
+
+  async function recordAssessmentAnswer(lesson, card, correct) {
+    const user = window.vocabAuth.getUser();
+    if (!user) return;
+
+    const points = correct ? 1 : 0;
+    const displayName = user.displayName || user.email;
+
+    sdk.addDoc(sdk.collection(db, "activity"), {
+      uid: user.uid,
+      type: "assessment_answer",
+      lesson,
+      hanzi: card.hanzi,
+      cardId: card.id,
+      correct,
+      points,
+      createdAt: sdk.serverTimestamp(),
+    });
+
+    touchLessonStats(lesson, user.uid);
+
+    if (points === 0) return;
+
+    const scoreRef = sdk.doc(db, "scores", user.uid);
+    try {
+      await sdk.runTransaction(db, async (tx) => {
+        const snap = await tx.get(scoreRef);
+        const data = snap.exists() ? snap.data() : {};
+        const masteredCount = data.masteredCount || 0;
+        const matchPoints = data.matchPoints || 0;
+        const assessmentPoints = (data.assessmentPoints || 0) + points;
+        tx.set(
+          scoreRef,
+          {
+            displayName,
+            masteredIds: data.masteredIds || [],
+            masteredCount,
+            matchPoints,
+            assessmentPoints,
+            totalScore: masteredCount + matchPoints + assessmentPoints,
+            updatedAt: sdk.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      });
+    } catch (e) {
+      /* offline or permission issue: activity is already logged, score sync can lag */
+    }
+  }
+
+  async function recordPracticeComplete(lesson, questionType, correctCount, wrongCount) {
+    const user = window.vocabAuth.getUser();
+    if (!user) return;
+
+    const key = lessonKey(lesson);
+    const incType1 = questionType === "1" || questionType === "mixed";
+    const incType2 = questionType === "2" || questionType === "mixed";
+    const ref = sdk.doc(db, "lessonPracticeCompletions", `${key}_${user.uid}`);
+    try {
+      await sdk.runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : {};
+        const completions = (data.completions || 0) + 1;
+        const completionsType1 = (data.completionsType1 || 0) + (incType1 ? 1 : 0);
+        const completionsType2 = (data.completionsType2 || 0) + (incType2 ? 1 : 0);
+        tx.set(
+          ref,
+          { uid: user.uid, lesson: key, completions, completionsType1, completionsType2, updatedAt: sdk.serverTimestamp() },
+          { merge: true }
+        );
+      });
+    } catch (e) {
+      /* offline or permission issue */
+    }
+
+    sdk.addDoc(sdk.collection(db, "activity"), {
+      uid: user.uid,
+      type: "practice_complete",
+      lesson: key,
+      questionType,
+      correctCount: correctCount || 0,
+      wrongCount: wrongCount || 0,
+      createdAt: sdk.serverTimestamp(),
+    });
+
+    touchLessonStats(lesson, user.uid);
+  }
+
+  async function recordTypingTestComplete(articleId, articleTitle, correctCount, wrongCount, elapsedSeconds) {
+    const user = window.vocabAuth.getUser();
+    if (!user) return;
+
+    sdk.addDoc(sdk.collection(db, "activity"), {
+      uid: user.uid,
+      type: "typing_test_complete",
+      lesson: "typing",
+      articleId,
+      articleTitle,
+      correctCount: correctCount || 0,
+      wrongCount: wrongCount || 0,
+      elapsedSeconds: elapsedSeconds || 0,
+      createdAt: sdk.serverTimestamp(),
+    });
+
+    if (articleId != null) {
+      sdk.setDoc(
+        sdk.doc(db, "typingTestStats", String(articleId)),
+        { articleId, title: articleTitle, learners: sdk.arrayUnion(user.uid), attempts: sdk.increment(1) },
+        { merge: true }
+      );
+    }
+  }
+
+  const MISTAKE_CLEAR_THRESHOLD = 3;
+
+  let wrongWordIds = new Set();
+  let wrongWordCorrectCounts = {};
+  const wrongWordListeners = [];
+
+  function notifyWrongWordListeners() {
+    wrongWordListeners.forEach((cb) => cb(wrongWordIds));
+  }
+
+  function onWrongWordsChange(cb) {
+    wrongWordListeners.push(cb);
+    cb(wrongWordIds);
+  }
+
+  async function refreshWrongWords() {
+    const user = window.vocabAuth.getUser();
+    if (!user) {
+      wrongWordIds = new Set();
+      wrongWordCorrectCounts = {};
+      notifyWrongWordListeners();
+      return;
+    }
+    try {
+      const snap = await sdk.getDoc(sdk.doc(db, "wrongWords", user.uid));
+      const data = snap.exists() ? snap.data() : {};
+      wrongWordIds = new Set(data.cardIds || []);
+      wrongWordCorrectCounts = data.correctCounts || {};
+    } catch (e) {
+      wrongWordIds = new Set();
+      wrongWordCorrectCounts = {};
+    }
+    notifyWrongWordListeners();
+  }
+
+  function getWrongWordIds() {
+    return wrongWordIds;
+  }
+
+  // A word leaves the mistake set only once it's been answered correctly
+  // MISTAKE_CLEAR_THRESHOLD times total (a wrong answer in between does not
+  // reset the count). Uses a transaction (not arrayUnion/arrayRemove, which
+  // the vendored SDK build doesn't include) so counts stay correct across
+  // concurrent tabs/devices.
+  async function updateWrongWord(cardId, correct) {
+    const user = window.vocabAuth.getUser();
+    if (!user) return;
+
+    const key = String(cardId);
+    const ref = sdk.doc(db, "wrongWords", user.uid);
+    let nextIds = null;
+    let nextCounts = null;
+    try {
+      await sdk.runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : {};
+        const ids = new Set(data.cardIds || []);
+        const counts = Object.assign({}, data.correctCounts || {});
+
+        if (!correct) {
+          if (!ids.has(cardId)) {
+            ids.add(cardId);
+            counts[key] = 0;
+          }
+        } else if (ids.has(cardId)) {
+          const count = (counts[key] || 0) + 1;
+          if (count >= MISTAKE_CLEAR_THRESHOLD) {
+            ids.delete(cardId);
+            delete counts[key];
+          } else {
+            counts[key] = count;
+          }
+        }
+
+        nextIds = Array.from(ids);
+        nextCounts = counts;
+        tx.set(ref, { uid: user.uid, cardIds: nextIds, correctCounts: counts }, { merge: true });
+      });
+    } catch (e) {
+      /* offline or permission issue */
+      return;
+    }
+
+    wrongWordIds = new Set(nextIds || []);
+    wrongWordCorrectCounts = nextCounts || {};
+    notifyWrongWordListeners();
+  }
+
+  window.vocabAuth.onChange(() => refreshWrongWords());
+
+  window.vocabActivity = {
+    recordEliminate,
+    recordMatchComplete,
+    recordAssessmentAnswer,
+    recordPracticeComplete,
+    recordTypingTestComplete,
+    matchGamePoints,
+    getWrongWordIds,
+    updateWrongWord,
+    onWrongWordsChange,
+  };
+})();

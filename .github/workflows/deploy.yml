@@ -1,0 +1,30 @@
+name: Deploy to Hostinger
+
+# Every push to main uploads the site's static files to ktailearn.com's
+# Hostinger hosting via FTP, into the PrimaryChinese3B subfolder — see
+# DEPLOY.md for how to set up the three secrets this workflow needs.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy over FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR || '/public_html/PrimaryChinese3B/' }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/*.md

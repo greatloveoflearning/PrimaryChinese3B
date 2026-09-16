@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国小学语文学习平台 · 三年级下册</title>
+<link rel="stylesheet" href="assets/style.css?v=32">
+</head>
+<body>
+<div id="paywall-overlay" class="paywall-overlay" hidden>
+  <div class="paywall-card">
+    <h2>试用额度已用完 · Trial limit reached</h2>
+    <p>你已经免费体验了 <strong id="paywall-limit-text">50</strong> 次 Flashcards / Match / Practice / Live Game，感谢试用！继续使用需要解锁全部功能。</p>
+    <p class="i18n-en">You've used your <strong id="paywall-limit-text-en">50</strong> free tries across Flashcards / Match / Practice / Live Game. Thanks for trying it out! Unlock full access to continue.</p>
+
+    <div class="paywall-section">
+      <h3>方式一：Interac e-Transfer（加拿大境内）</h3>
+      <p>年费订阅 <strong>CAD $68 / 年</strong>，请转账到：<strong>info@ktailearn.com</strong></p>
+      <p>备注栏请填写学生的注册名：<strong id="paywall-student-name"></strong></p>
+      <p>我们会在 <strong>24 小时内</strong>为你开通一年的全部功能，到期前我们会提醒续费。</p>
+      <p class="i18n-en">Option 1: Interac e-Transfer (Canada only) — Annual subscription <strong>CAD $68 / year</strong>, sent to <strong>info@ktailearn.com</strong>. Please put your student's registered name (<strong id="paywall-student-name-en"></strong>) in the memo. We'll unlock your account within <strong>24 hours</strong> and remind you before renewal.</p>
+      <p class="paywall-note">⚠️ 每个账号仅限一名学生本人使用，请勿多人共用一个账号。</p>
+      <p class="i18n-en paywall-note">Each account is licensed to one student only — please don't share a single account across multiple students.</p>
+    </div>
+
+    <div class="paywall-section paywall-promo">
+      <h3>优惠方案 · Promotions</h3>
+      <ul>
+        <li>报读线上小组课，可免费赠送一年订阅费。<span class="i18n-en">Enroll in an online group class and get one year of subscription free.</span></li>
+        <li>5 人或以上团购，每人优惠至 <strong>CAD $60</strong>。<span class="i18n-en">Group purchase of 5 or more: <strong>CAD $60</strong> each.</span></li>
+        <li>朋友圈集赞 10 个，或发一次小红书，可优惠至 <strong>CAD $60</strong>。<span class="i18n-en">Get 10 likes on a WeChat Moments post, or post once on Rednote (Xiaohongshu): <strong>CAD $60</strong>.</span></li>
+      </ul>
+      <p>具体请联系客服 · For details, please contact us:</p>
+      <p>📞 +1-647-407-1280　·　💬 微信 / WeChat：<strong>KTAILEARN</strong>　·　✉️ <strong>info@ktailearn.com</strong></p>
+    </div>
+
+    <div class="paywall-section">
+      <h3>方式二：不能在加拿大境内转账？</h3>
+      <p>请填写以下联系方式，管理员将在一天内与您电话或微信联系。</p>
+      <p class="i18n-en">Option 2: Can't send an Interac e-Transfer from Canada? Fill in your contact info below and we'll reach out by phone or WeChat within a day.</p>
+      <form id="paywall-lead-form" class="paywall-form">
+        <input type="text" id="paywall-lead-name" placeholder="姓名 · Name" required>
+        <input type="text" id="paywall-lead-phone" placeholder="电话 · Phone">
+        <input type="text" id="paywall-lead-wechat" placeholder="微信号 · WeChat ID">
+        <input type="email" id="paywall-lead-email" placeholder="邮箱 · Email" required>
+        <button type="submit" id="paywall-lead-submit-btn">提交 · Submit</button>
+      </form>
+      <p id="paywall-lead-msg" class="paywall-lead-msg" hidden></p>
+    </div>
+
+    <div class="paywall-section">
+      <h3>报读中国小学语文线上课意向表</h3>
+      <p class="i18n-en">Elementary Chinese Online Class — Enrollment Interest Form</p>
+      <p>有兴趣报读线上小组课？填写以下信息，我们会尽快与您联系。</p>
+      <p class="i18n-en">Interested in our online group class? Leave your details below and we'll be in touch soon.</p>
+      <form id="paywall-class-form" class="paywall-form">
+        <input type="text" id="paywall-class-name" placeholder="姓名 · Name" required>
+        <input type="text" id="paywall-class-phone" placeholder="电话 · Phone">
+        <input type="text" id="paywall-class-wechat" placeholder="微信号 · WeChat ID">
+        <input type="email" id="paywall-class-email" placeholder="电邮 · Email" required>
+        <select id="paywall-class-grade" required>
+          <option value="" disabled selected>报读年级 · Grade level</option>
+          <option value="g1-1">一年级上册班 · Grade 1 (Semester 1)</option>
+          <option value="g1-2">一年级下册班 · Grade 1 (Semester 2)</option>
+          <option value="g2-1">二年级上册班 · Grade 2 (Semester 1)</option>
+          <option value="g2-2">二年级下册班 · Grade 2 (Semester 2)</option>
+          <option value="g3-1">三年级上册班 · Grade 3 (Semester 1)</option>
+          <option value="g3-2">三年级下册班 · Grade 3 (Semester 2)</option>
+          <option value="g3-1">三年级上册班 · Grade 3 (Semester 1)</option>
+          <option value="g3-2">三年级下册班 · Grade 3 (Semester 2)</option>
+          <option value="g5-1">五年级上册班 · Grade 5 (Semester 1)</option>
+          <option value="g5-2">五年级下册班 · Grade 5 (Semester 2)</option>
+          <option value="g6-1">六年级上册班 · Grade 6 (Semester 1)</option>
+          <option value="g6-2">六年级下册班 · Grade 6 (Semester 2)</option>
+        </select>
+        <button type="submit" id="paywall-class-submit-btn">提交 · Submit</button>
+      </form>
+      <p id="paywall-class-msg" class="paywall-lead-msg" hidden></p>
+    </div>
+
+    <button type="button" id="paywall-signout-btn" class="ghost-btn">Sign out</button>
+  </div>
+</div>
+<header class="topbar">
+  <div class="brand-title">
+    <img class="brand-logo brand-logo-kt" src="assets/images/终结版-名片的Logo_with_chip.png" alt="KT AI LEARN logo">
+    <div class="brand-title-text">
+      <span class="brand-zh-main">中国小学语文学习平台</span>
+      <span class="brand-zh-sub">三年级下册</span>
+      <span class="brand-en">Elementary Chinese Language Learning Platform · Grade 3 (Semester 2)</span>
+    </div>
+  </div>
+  <div class="header-links">
+    <a class="guide-link" href="intro-zh.html" target="_blank" rel="noopener">📖 平台使用介绍 · How to Use</a>
+    <a class="public-intent-toggle-btn" href="#purchase-intent" data-target="public-purchase-panel">💳 购买意向 · Purchase Interest</a>
+    <a class="public-intent-toggle-btn" href="#class-interest" data-target="public-class-panel">🏫 报读线上小组课 · Online Group Class</a>
+  </div>
+  <nav class="mode-tabs" role="tablist">
+    <button class="mode-tab active" data-mode="study" role="tab" aria-selected="true">📇 闪卡 · Flashcards</button>
+    <button class="mode-tab" data-mode="match" role="tab" aria-selected="false">🧩 配对 · Match</button>
+    <button class="mode-tab" data-mode="practice" role="tab" aria-selected="false">📝 练习 · Practice</button>
+    <button class="mode-tab" data-mode="assessment" role="tab" aria-selected="false">🏆 线上游戏 · Live Game</button>
+    <button class="mode-tab" data-mode="typing" role="tab" aria-selected="false">⌨️ 打字测验 · Typing Test</button>
+    <button class="mode-tab" data-mode="report" role="tab" aria-selected="false">📊 报告 · Report</button>
+  </nav>
+  <div class="account-widget">
+    <button id="account-btn" class="ghost-btn" type="button">Sign in</button>
+    <div class="account-panel" id="account-panel" hidden>
+      <div class="account-tabs" id="account-tabs">
+        <button type="button" class="account-tab active" data-auth-mode="login">Log in</button>
+        <button type="button" class="account-tab" data-auth-mode="signup">Sign up</button>
+      </div>
+      <form id="auth-form">
+        <input type="text" id="auth-name" placeholder="Display name" autocomplete="nickname" hidden>
+        <input type="email" id="auth-email" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="auth-password" placeholder="Password (6+ characters)" autocomplete="current-password" required minlength="6">
+        <button type="submit" id="auth-submit">Log in</button>
+      </form>
+      <div class="account-profile" id="account-profile" hidden>
+        <p id="account-profile-name"></p>
+        <button type="button" id="logout-btn" class="ghost-btn">Log out</button>
+      </div>
+      <p class="account-error" id="account-error" hidden></p>
+    </div>
+  </div>
+</header>
+
+<section class="public-intent" id="public-intent-bar" hidden>
+  <div class="public-intent-panel" id="public-purchase-panel" hidden>
+    <h2>购买意向 · Purchase Interest</h2>
+    <p>还没注册，但想先了解订阅？留下联系方式，我们会主动联系你。</p>
+    <p class="i18n-en">Not registered yet but interested in subscribing? Leave your contact info and we'll reach out.</p>
+    <form id="public-lead-form" class="paywall-form">
+      <input type="text" id="public-lead-name" placeholder="姓名 · Name" required>
+      <input type="text" id="public-lead-phone" placeholder="电话 · Phone">
+      <input type="text" id="public-lead-wechat" placeholder="微信号 · WeChat ID">
+      <input type="email" id="public-lead-email" placeholder="邮箱 · Email" required>
+      <button type="submit" id="public-lead-submit-btn">提交 · Submit</button>
+    </form>
+    <p id="public-lead-msg" class="paywall-lead-msg" hidden></p>
+  </div>
+
+  <div class="public-intent-panel" id="public-class-panel" hidden>
+    <h2>报读中国小学语文线上课意向表 · Online Class Enrollment</h2>
+    <p>有兴趣报读线上小组课？填写以下信息，我们会尽快与您联系。</p>
+    <p class="i18n-en">Interested in our online group class? Leave your details below and we'll be in touch soon.</p>
+    <form id="public-class-form" class="paywall-form">
+      <input type="text" id="public-class-name" placeholder="姓名 · Name" required>
+      <input type="text" id="public-class-phone" placeholder="电话 · Phone">
+      <input type="text" id="public-class-wechat" placeholder="微信号 · WeChat ID">
+      <input type="email" id="public-class-email" placeholder="电邮 · Email" required>
+      <select id="public-class-grade" required>
+        <option value="" disabled selected>报读年级 · Grade level</option>
+        <option value="g1-1">一年级上册班 · Grade 1 (Semester 1)</option>
+        <option value="g1-2">一年级下册班 · Grade 1 (Semester 2)</option>
+        <option value="g2-1">二年级上册班 · Grade 2 (Semester 1)</option>
+        <option value="g2-2">二年级下册班 · Grade 2 (Semester 2)</option>
+        <option value="g3-1">三年级上册班 · Grade 3 (Semester 1)</option>
+        <option value="g3-2">三年级下册班 · Grade 3 (Semester 2)</option>
+        <option value="g3-1">三年级上册班 · Grade 3 (Semester 1)</option>
+        <option value="g3-2">三年级下册班 · Grade 3 (Semester 2)</option>
+        <option value="g5-1">五年级上册班 · Grade 5 (Semester 1)</option>
+        <option value="g5-2">五年级下册班 · Grade 5 (Semester 2)</option>
+        <option value="g6-1">六年级上册班 · Grade 6 (Semester 1)</option>
+        <option value="g6-2">六年级下册班 · Grade 6 (Semester 2)</option>
+      </select>
+      <button type="submit" id="public-class-submit-btn">提交 · Submit</button>
+    </form>
+    <p id="public-class-msg" class="paywall-lead-msg" hidden></p>
+  </div>
+</section>
+
+<div class="toolbar" id="toolbar">
+  <div class="toolbar-group">
+    <label for="set-select">Lesson</label>
+    <select id="set-select"></select>
+  </div>
+
+  <div class="toolbar-group" id="study-controls">
+    <label class="switch">
+      <input type="checkbox" id="shuffle-toggle">
+      <span class="switch-track"><span class="switch-thumb"></span></span>
+      <span class="switch-label">Shuffled mode</span>
+    </label>
+    <span class="stat-chip" id="mastery-stat">0 eliminated · 0 remaining</span>
+    <button id="reset-eliminated-btn" class="ghost-btn">Reset lesson</button>
+    <label class="switch">
+      <input type="checkbox" id="random-draw-toggle">
+      <span class="switch-track"><span class="switch-thumb"></span></span>
+      <span class="switch-label">🎲 抽读模式 Random draw</span>
+    </label>
+  </div>
+
+  <div class="toolbar-group" id="match-controls" hidden>
+    <label for="match-pairs-select">Pairs</label>
+    <select id="match-pairs-select">
+      <option value="8" selected>8</option>
+      <option value="12">12</option>
+      <option value="14">14</option>
+      <option value="16">16</option>
+    </select>
+    <span class="stat-chip" id="match-timer">00:00</span>
+    <button id="new-game-btn" class="ghost-btn">New Game</button>
+  </div>
+</div>
+
+<main>
+  <section id="study-view">
+    <div class="random-draw-panel" id="random-draw-panel" hidden>
+      <div class="random-draw-setup">
+        <label for="random-draw-count">抽读数量 · Draw count</label>
+        <input type="number" id="random-draw-count" min="1" value="10">
+        <button type="button" id="random-draw-btn">🎲 抽取 · Draw</button>
+        <button type="button" id="random-draw-reveal-btn" class="ghost-btn">👀 显示拼音/释义 · Reveal</button>
+      </div>
+      <div class="random-draw-list" id="random-draw-list"></div>
+    </div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+      <span id="progress-label">0 / 0</span>
+    </div>
+
+    <div class="stage" id="study-stage">
+      <button class="nav-btn" id="prev-btn" aria-label="Previous card">&#8249;</button>
+
+      <div id="card" class="card" tabindex="0">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="face-label">Term</div>
+            <button class="speak-btn" id="speak-front-btn" type="button" aria-label="Play Chinese pronunciation" title="Play Chinese pronunciation">🔊</button>
+            <div id="front-hanzi" class="hanzi"></div>
+            <div class="hint">Click or press Space to flip</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="face-label">Explanation</div>
+            <div class="speak-row">
+              <button class="speak-btn" id="speak-back-cn-btn" type="button" aria-label="Play Chinese audio" title="Play Chinese audio">🔊 中文</button>
+              <button class="speak-btn" id="speak-back-en-btn" type="button" aria-label="Play English audio" title="Play English audio">🔊 English</button>
+            </div>
+            <div id="back-pinyin" class="pinyin"></div>
+            <div id="back-meaning" class="meaning"></div>
+            <div class="example-block">
+              <div id="back-example-cn" class="example example-cn"></div>
+              <div id="back-example-en" class="example example-en"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="nav-btn" id="next-btn" aria-label="Next card">&#8250;</button>
+    </div>
+
+    <div class="study-complete" id="study-complete" hidden>
+      <p id="study-complete-msg">🎉 All words in this lesson are eliminated.</p>
+      <button id="study-complete-reset-btn" class="ghost-btn">Reset lesson</button>
+    </div>
+
+    <div class="bottom-controls" id="study-bottom-controls">
+      <button id="flip-btn">Flip Card</button>
+      <button id="eliminate-btn" class="mastered-btn" type="button" title="Mark as mastered and remove from rotation">✅ 我已会 · Got it!</button>
+      <span id="card-index-label"></span>
+    </div>
+  </section>
+
+  <section id="match-view" hidden>
+    <p class="match-intro" id="match-intro">Match each Chinese word with its pinyin and English translation.</p>
+    <div class="match-columns" id="match-columns">
+      <div class="match-col">
+        <h3 class="match-col-title">Chinese</h3>
+        <div class="match-tiles" id="match-col-cn"></div>
+      </div>
+      <div class="match-col">
+        <h3 class="match-col-title">Pinyin + English</h3>
+        <div class="match-tiles" id="match-col-en"></div>
+      </div>
+    </div>
+    <div class="match-complete" id="match-complete" hidden>
+      <p>🎉 All matched in <span id="match-final-time"></span>!</p>
+      <p class="report-block-note" id="match-completions"></p>
+      <p class="percentile-note" id="match-percentile"></p>
+      <div class="report-table-wrap" id="match-leaderboard-wrap" hidden>
+        <table class="report-table" id="match-complete-leaderboard-table">
+          <thead><tr><th>Rank</th><th>Player</th><th>Best time</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <button id="match-again-btn">Play Again</button>
+    </div>
+  </section>
+
+  <section id="report-view" hidden>
+    <div class="report-signed-out" id="report-signed-out">
+      <p>Sign in to track your progress and see the leaderboard.</p>
+      <button type="button" id="report-signin-btn" class="ghost-btn">Sign in</button>
+    </div>
+
+    <div class="report-content" id="report-content" hidden>
+      <div class="report-block" id="admin-block-top" hidden>
+        <div class="report-block-header admin-activity-header">
+          <h2>Member's Progress by Lesson</h2>
+          <select id="admin-activity-select"></select>
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table" id="admin-progress-table">
+            <thead>
+              <tr><th>Lesson</th><th>Mastered</th><th>Total</th><th>Match</th><th>Practice T1</th><th>Practice T2</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="report-block-actions parent-email-row">
+          <button type="button" id="send-parent-report-btn" class="ghost-btn">🖨️ 生成PDF报告 · Generate PDF report</button>
+          <span class="report-block-note" id="parent-email-status"></span>
+        </div>
+
+        <h3>Member Activity</h3>
+        <div class="report-stats" id="admin-activity-stats"></div>
+        <div class="report-table-wrap">
+          <table class="report-table" id="admin-activity-table">
+            <thead>
+              <tr><th>When</th><th>What</th><th>Lesson</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <div class="report-block">
+        <div class="report-block-header">
+          <h2>Match leaderboard</h2>
+          <select id="report-match-lesson-select"></select>
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table" id="report-match-leaderboard-table">
+            <thead>
+              <tr><th>Rank</th><th>Member</th><th>Best time</th><th>Pairs</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="report-block">
+        <h2>Leaderboard</h2>
+        <div class="report-table-wrap">
+          <table class="report-table" id="report-leaderboard-table">
+            <thead>
+              <tr><th>Rank</th><th>Member</th><th>Mastered</th><th>Match pts</th><th>Assessment pts</th><th>Score</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="report-block" id="admin-typing-block" hidden>
+        <h2>⌨️ Typing Test usage</h2>
+        <div class="report-table-wrap">
+          <table class="report-table" id="admin-typing-stats-table">
+            <thead>
+              <tr><th>Text</th><th>Attempts</th><th>Unique learners</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="report-block" id="admin-block-bottom" hidden>
+        <div class="report-block-header">
+          <h2>Members (admin)</h2>
+          <div class="report-block-actions">
+            <button type="button" id="admin-members-export-btn" class="ghost-btn">⬇️ Export CSV</button>
+          </div>
+        </div>
+        <p class="report-block-note">Grant "can host" to let a member start online assessments.</p>
+        <div class="report-table-wrap">
+          <table class="report-table" id="admin-members-table">
+            <thead>
+              <tr><th>Member</th><th>Email</th><th>Can host</th><th>Trial games</th><th>Subscription</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="report-block-header">
+          <h3>Potential customers (leads)</h3>
+          <div class="report-block-actions">
+            <button type="button" id="admin-leads-add-btn" class="ghost-btn">+ Add</button>
+            <button type="button" id="admin-leads-export-btn" class="ghost-btn">⬇️ Export CSV</button>
+          </div>
+        </div>
+        <p class="report-block-note">From the paywall's "can't e-Transfer" form, or the public purchase-intent form on the homepage.</p>
+        <div class="report-table-wrap">
+          <table class="report-table" id="admin-leads-table">
+            <thead>
+              <tr><th>When</th><th>Name</th><th>Phone</th><th>WeChat</th><th>Email</th><th>Source</th><th>Actions</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="report-block-header">
+          <h3>Class enrollment interest</h3>
+          <div class="report-block-actions">
+            <button type="button" id="admin-class-interest-add-btn" class="ghost-btn">+ Add</button>
+            <button type="button" id="admin-class-interest-export-btn" class="ghost-btn">⬇️ Export CSV</button>
+          </div>
+        </div>
+        <p class="report-block-note">From the paywall's or the public homepage's "报读中国小学语文线上课意向表" form.</p>
+        <div class="report-table-wrap">
+          <table class="report-table" id="admin-class-interest-table">
+            <thead>
+              <tr><th>When</th><th>Name</th><th>Grade</th><th>Phone</th><th>WeChat</th><th>Email</th><th>Source</th><th>Actions</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="report-block">
+        <h2>Progress by lesson</h2>
+        <div class="report-table-wrap">
+          <table class="report-table" id="report-lesson-table">
+            <thead>
+              <tr><th>Lesson</th><th>Mastered</th><th>Total</th><th>Match</th><th>Practice T1</th><th>Practice T2</th><th>Learners</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="report-block">
+        <h2>Recent activity</h2>
+        <div class="report-table-wrap">
+          <table class="report-table" id="report-activity-table">
+            <thead>
+              <tr><th>When</th><th>What</th><th>Lesson</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="report-stats" id="report-stats"></div>
+    </div>
+  </section>
+
+  <section id="assessment-view" hidden>
+    <div class="assessment-signed-out" id="assessment-signed-out">
+      <p>Sign in to join or host an online assessment.</p>
+      <button type="button" id="assessment-signin-btn" class="ghost-btn">Sign in</button>
+    </div>
+
+    <div class="assessment-home" id="assessment-home" hidden>
+      <div class="assessment-card">
+        <h2>Join a game</h2>
+        <form id="join-form" class="assessment-form">
+          <input type="text" id="join-code-input" placeholder="Room code" maxlength="6" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+          <button type="submit">Join</button>
+        </form>
+        <p class="assessment-error" id="join-error" hidden></p>
+      </div>
+      <div class="assessment-card" id="host-entry-card" hidden>
+        <h2>Host a game</h2>
+        <p class="report-block-note">Start a live assessment other members can join.</p>
+        <button type="button" id="host-new-btn">Host a new assessment</button>
+      </div>
+    </div>
+
+    <div class="assessment-card" id="assessment-host-setup" hidden>
+      <h2>New assessment</h2>
+      <form id="host-setup-form" class="assessment-form assessment-form-grid">
+        <label>Lesson
+          <select id="host-lesson-select"></select>
+        </label>
+        <label>Question type
+          <select id="host-question-type-select">
+            <option value="1">Type 1 — see the word, type the word</option>
+            <option value="2">Type 2 — fill in the blank</option>
+            <option value="mixed" selected>Mixed</option>
+          </select>
+        </label>
+        <label>Duration
+          <select id="host-duration-select">
+            <option value="60">1 minute</option>
+            <option value="120" selected>2 minutes</option>
+            <option value="180">3 minutes</option>
+            <option value="300">5 minutes</option>
+          </select>
+        </label>
+        <label class="host-play-check">
+          <input type="checkbox" id="host-play-checkbox">
+          I'll play too (uncheck to just host/spectate)
+        </label>
+        <label class="host-play-check">
+          <input type="checkbox" id="host-music-checkbox" checked>
+          🔊 Play music when results appear
+        </label>
+        <button type="submit">Create room</button>
+      </form>
+      <button type="button" id="host-setup-cancel-btn" class="ghost-btn">Cancel</button>
+    </div>
+
+    <div class="assessment-lobby" id="assessment-lobby" hidden>
+      <div class="lobby-code-block">
+        <div class="lobby-code-label">Room code</div>
+        <div class="lobby-code" id="lobby-code"></div>
+        <p id="lobby-info"></p>
+      </div>
+      <div class="report-table-wrap">
+        <table class="report-table">
+          <thead><tr><th>Player</th></tr></thead>
+          <tbody id="lobby-players-body"></tbody>
+        </table>
+      </div>
+      <div class="assessment-lobby-actions">
+        <button type="button" id="lobby-start-btn" hidden>Start</button>
+        <button type="button" id="lobby-leave-btn" class="ghost-btn">Leave</button>
+      </div>
+    </div>
+
+    <div class="assessment-running" id="assessment-running" hidden>
+      <div class="running-top">
+        <span class="stat-chip" id="running-timer">00:00</span>
+        <span class="stat-chip" id="running-score">Score: 0</span>
+      </div>
+      <div class="assessment-question" id="assessment-question">
+        <div class="speak-row" id="question-speak-row">
+          <button type="button" class="speak-btn" id="question-speak-en-btn" hidden>🔊 English</button>
+        </div>
+        <div id="question-prompt" class="question-prompt"></div>
+        <form id="answer-form" class="assessment-form">
+          <input type="text" id="answer-input" autocomplete="off" placeholder="Type the Chinese word…" lang="zh-CN">
+          <button type="submit">Submit</button>
+        </form>
+        <p id="answer-feedback" class="answer-feedback" hidden></p>
+      </div>
+      <div class="assessment-question" id="assessment-spectating" hidden>
+        <p>👀 You're hosting this round — watch the live leaderboard below.</p>
+      </div>
+      <div class="report-block">
+        <h3>Live leaderboard</h3>
+        <div class="report-table-wrap">
+          <table class="report-table" id="running-leaderboard-table">
+            <thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="assessment-results" id="assessment-results" hidden>
+      <div class="results-header-row">
+        <h2>🏁 Results</h2>
+        <button type="button" id="results-music-toggle-btn" class="ghost-btn">🔊 音乐 Music: On</button>
+      </div>
+      <div class="podium" id="podium"></div>
+      <p class="percentile-note" id="assessment-percentile"></p>
+      <div class="report-table-wrap">
+        <table class="report-table" id="results-table">
+          <thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="report-block" id="answer-report-block">
+        <div class="report-block-header">
+          <h2>Student Overview</h2>
+        </div>
+        <p class="report-block-note">Tap a player's wrong count to see which questions they missed.</p>
+        <div id="student-overview-list"></div>
+      </div>
+
+      <div class="assessment-lobby-actions">
+        <button type="button" id="host-again-btn" hidden>Host another round</button>
+        <button type="button" id="results-leave-btn" class="ghost-btn">Leave</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="practice-view" hidden>
+    <div class="practice-signed-out" id="practice-signed-out">
+      <p>Sign in to practice with the assessment question types.</p>
+      <button type="button" id="practice-signin-btn" class="ghost-btn">Sign in</button>
+    </div>
+
+    <div class="assessment-card" id="practice-setup" hidden>
+      <h2>Practice</h2>
+      <form id="practice-setup-form" class="assessment-form assessment-form-grid">
+        <label>Lesson
+          <select id="practice-lesson-select"></select>
+        </label>
+        <label>Question type
+          <select id="practice-question-type-select">
+            <option value="1" selected>Type 1 — see the word, type the word</option>
+            <option value="2">Type 2 — fill in the blank</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </label>
+        <label>Number of questions
+          <select id="practice-count-select">
+            <option value="10">10 questions</option>
+            <option value="20" selected>20 questions</option>
+            <option value="30">30 questions</option>
+            <option value="40">40 questions</option>
+            <option value="all">All words</option>
+          </select>
+        </label>
+        <button type="submit">Start practice</button>
+      </form>
+    </div>
+
+    <div class="assessment-running" id="practice-running" hidden>
+      <div class="running-top">
+        <span class="stat-chip" id="practice-progress">Question 1 of 20</span>
+        <span class="stat-chip" id="practice-tally">✅ 0 · ❌ 0</span>
+      </div>
+      <div class="assessment-question" id="practice-question">
+        <div class="speak-row">
+          <button type="button" class="speak-btn" id="practice-speak-cn-btn">🔊 中文</button>
+          <button type="button" class="speak-btn" id="practice-speak-en-btn" hidden>🔊 English</button>
+        </div>
+        <div id="practice-prompt" class="question-prompt"></div>
+        <form id="practice-answer-form" class="assessment-form">
+          <input type="text" id="practice-answer-input" autocomplete="off" placeholder="Type the Chinese word…" lang="zh-CN">
+          <button type="submit">Submit</button>
+        </form>
+        <p id="practice-feedback" class="answer-feedback" hidden></p>
+      </div>
+      <div class="assessment-lobby-actions">
+        <button type="button" id="practice-end-btn" class="ghost-btn">End practice</button>
+      </div>
+    </div>
+
+    <div class="assessment-results" id="practice-summary" hidden>
+      <h2>📝 Practice summary</h2>
+      <p class="report-block-note" id="practice-summary-line"></p>
+      <div class="report-table-wrap">
+        <table class="report-table" id="practice-summary-table">
+          <thead><tr><th>Question</th><th>Your answer</th><th>Correct answer</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="assessment-lobby-actions">
+        <button type="button" id="practice-again-btn">Practice again</button>
+        <button type="button" id="practice-change-btn" class="ghost-btn">Change lesson/type</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="typing-view" hidden>
+    <div class="typing-signed-out" id="typing-signed-out">
+      <p>Sign in to use the Typing Test.</p>
+      <button type="button" id="typing-signin-btn" class="ghost-btn">Sign in</button>
+    </div>
+
+    <div class="assessment-card" id="typing-main" hidden>
+      <h2>⌨️ 打字测试 · Typing Test</h2>
+      <div class="typing-instructions">
+        <p>Usage: Type tone numbers → 1&macr; 2&acute; 3&#711; 4&#96; 5 = neutral.</p>
+        <p>Example: "我" = wo3</p>
+      </div>
+
+      <div class="typing-toolbar">
+        <label>Duration
+          <select id="typing-duration-select">
+            <option value="30">30s</option>
+            <option value="60" selected>60s</option>
+            <option value="120">120s</option>
+            <option value="0">Unlimited</option>
+          </select>
+        </label>
+        <button type="button" id="typing-start-btn">Start</button>
+        <button type="button" id="typing-restart-btn" class="ghost-btn" disabled>Restart</button>
+        <button type="button" id="typing-newtext-btn" class="ghost-btn">New Text</button>
+        <button type="button" id="typing-toggle-pinyin-btn" class="ghost-btn">Hide all Pinyin</button>
+        <span class="stat-chip" id="typing-correct-count" title="Correct so far">0</span>
+        <span class="stat-chip" id="typing-timer">60s</span>
+      </div>
+
+      <div class="typing-article-picker" id="typing-article-picker" hidden>
+        <label>Choose a text
+          <select id="typing-article-select"></select>
+        </label>
+        <button type="button" id="typing-article-confirm-btn">Load</button>
+        <button type="button" id="typing-article-cancel-btn" class="ghost-btn">Cancel</button>
+      </div>
+
+      <input type="text" id="typing-input" class="typing-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type pinyin here…" disabled>
+      <div class="typing-passage" id="typing-passage"></div>
+
+      <div class="typing-results" id="typing-results" hidden>
+        <h3>Results</h3>
+        <p class="report-block-note" id="typing-results-line"></p>
+        <div class="report-table-wrap">
+          <table class="report-table" id="typing-mistakes-table">
+            <thead><tr><th>Character</th><th>Your input</th><th>Correct pinyin</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p id="footer-hint">Tip: use ← / → to navigate, Space or click the card to flip, Delete to eliminate.</p>
+  <p id="footer-stats" class="footer-stats"></p>
+  <p class="footer-feedback">
+    <a href="mailto:info@ktailearn.com?subject=3B%20Vocabulary%20Study%20Set%20-%20Feedback">💬 报告错误或提出优化建议 · Report a bug or suggest an improvement → info@ktailearn.com</a>
+  </p>
+  <p class="footer-copyright">© 2026 KTAILEARN. 版权所有，不得复制、转载或用于其他商业用途。<br>All rights reserved. No copying, reproduction, or commercial use without permission.</p>
+</footer>
+
+<audio id="live-game-bgm" src="assets/audio/live-game-bgm.mp3?v=1" loop preload="none"></audio>
+<audio id="results-fanfare" src="assets/audio/results-fanfare.mp3?v=1" preload="none"></audio>
+
+<script src="assets/vendor/firebase-vendor.js?v=20"></script>
+<script src="assets/vendor/emailjs.min.js?v=1"></script>
+<script src="assets/firebase-config.js?v=20"></script>
+<script src="assets/firebase-init.js?v=20"></script>
+<script src="assets/auth.js?v=20"></script>
+<script src="assets/activity.js?v=22"></script>
+<script src="assets/paywall.js?v=20"></script>
+<script src="assets/public-intent.js?v=21"></script>
+<script src="assets/vocab.js?v=1"></script>
+<script src="assets/app.js?v=29"></script>
+<script src="assets/report.js?v=30"></script>
+<script src="assets/assessment.js?v=27"></script>
+<script src="assets/practice.js?v=21"></script>
+<script src="assets/typing.js?v=5"></script>
+</body>
+</html>
