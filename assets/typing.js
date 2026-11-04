@@ -63,7 +63,7 @@
     articles.forEach((article) => {
       const opt = document.createElement("option");
       opt.value = String(article.id);
-      opt.textContent = `${article.id}${article.title}`;
+      opt.textContent = article.title;
       els.articleSelect.appendChild(opt);
     });
   }
@@ -262,7 +262,7 @@
   });
 
   els.articleConfirmBtn.addEventListener("click", () => {
-    const id = Number(els.articleSelect.value);
+    const id = els.articleSelect.value;
     els.articlePicker.hidden = true;
     loadArticle(id);
   });

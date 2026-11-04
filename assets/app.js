@@ -785,4 +785,8 @@
   }
 
   rebuildFromVocabData();
+  // Anonymous visitors start on the small preview set (assets/vocab.js); once
+  // sign-in state resolves, vocab-loader.js swaps in the full word list (for
+  // signed-in members) and notifies us to rebuild with it.
+  if (window.onVocabDataChange) window.onVocabDataChange(rebuildFromVocabData);
 })();
