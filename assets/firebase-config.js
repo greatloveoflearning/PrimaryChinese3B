@@ -16,18 +16,15 @@ if (window.FIREBASE_USE_EMULATOR) {
     appId: "1:000000000000:web:0000000000000000000000",
   };
 } else {
-  // TODO: replace with this project's OWN Firebase project's web app config
-  // (a separate Firebase project from the 4B site, per the plan for this
-  // repo). See FIREBASE_SETUP.md for step-by-step instructions on creating
-  // the project and finding these values. Not a secret — this just
-  // identifies which Firebase project the site talks to; access is enforced
-  // by firestore.rules, not by hiding this value.
+  // kt-ai-learn-primarychinese3b Firebase project's web app config. Not a
+  // secret — this just identifies which Firebase project the site talks to;
+  // access is enforced by firestore.rules, not by hiding this value.
   window.FIREBASE_CONFIG = {
-    apiKey: "REPLACE_ME",
-    authDomain: "REPLACE_ME.firebaseapp.com",
-    projectId: "REPLACE_ME",
-    storageBucket: "REPLACE_ME.firebasestorage.app",
-    messagingSenderId: "REPLACE_ME",
-    appId: "REPLACE_ME",
+    apiKey: "AIzaSyBJLkUxThyOGckHlXpoxtz_EZsZb_VpLvc",
+    authDomain: "kt-ai-learn-primarychinese3b.firebaseapp.com",
+    projectId: "kt-ai-learn-primarychinese3b",
+    storageBucket: "kt-ai-learn-primarychinese3b.firebasestorage.app",
+    messagingSenderId: "220356593792",
+    appId: "1:220356593792:web:286abdb5524ff37ce5fe65",
   };
 }
