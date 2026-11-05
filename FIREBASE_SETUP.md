@@ -47,17 +47,21 @@ it to auto-create the index (or run
 
 ## 4. Deploying the site
 
-See `DEPLOY.md` — this site deploys to `ktailearn.com/PrimaryChinese3B`
-on Hostinger (via an automatic FTP upload on every push to `main`), not
-GitHub Pages.
+This site deploys via **GitHub Pages**, with a `CNAME` file pointing it at
+`huawen3b.ktailearn.com` (a DNS CNAME record for that subdomain, added on
+whichever host manages ktailearn.com's DNS, needs to point at
+`greatloveoflearning.github.io`). GitHub Pages is enabled in the repo's
+Settings → Pages, source set to the `main` branch. Every push to `main`
+redeploys automatically — same pattern as the 4B site
+(`yuwen4b.ktailearn.com`).
 
 ## 5. Authorize the deployed domain
 
 Firebase Authentication only allows sign-in from domains you've explicitly
-allowed. Once the site is live on Hostinger: Firebase console → **安全
-(Security)** → **Authentication** → **Settings** tab → **Authorized
-domains** → **Add domain** → add `ktailearn.com` (just the host, no
-`https://` or path).
+allowed. Once the site is live: Firebase console → **安全 (Security)** →
+**Authentication** → **Settings** tab → **Authorized domains** → **Add
+domain** → add `huawen3b.ktailearn.com` (just the host, no `https://` or
+path).
 
 ## 6. Make yourself admin
 
