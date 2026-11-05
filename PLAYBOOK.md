@@ -250,3 +250,21 @@ browsable.
 - Cache-busting `?v=N` query strings on every `<script src>` in
   `index.html` — bump them whenever that file changes, or the browser
   may keep serving a stale cached copy after deploy.
+
+## 10. Typing Test toolbar: shared controls must not get their own div
+
+If the Typing Test gains multiple submodes (article / HSK / supplement),
+each with its own `.typing-toolbar` div toggled by `setMode()`, do not
+put mode-agnostic controls ("Hide all Pinyin", the correct-count chip)
+in a 4th standalone toolbar div after the three. A visible sibling div
+is still its own block-level row, so it always renders as an unwanted
+separate line below whichever mode's controls are actually showing.
+
+Fix: keep that markup (same ids) inside the default mode's toolbar in
+the HTML, then in `setMode()`, `appendChild` the two elements into
+whichever toolbar div is becoming active, alongside the `hidden`
+toggling — this reparents the real DOM nodes (no id duplication) so
+they flow inline with that mode's other controls via normal
+`flex-wrap`. This repo currently has only one typing submode, so its
+toolbar is a single div and this doesn't apply — but check again if a
+second submode is ever added here.
