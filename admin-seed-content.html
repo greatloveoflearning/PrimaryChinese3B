@@ -97,11 +97,14 @@
         }
       }
 
-      try {
-        await sdk.setDoc(sdk.doc(db, "vocabData", "list"), { words: data.vocabWords || [] });
-        log(`✅ vocabData/list: seeded ${(data.vocabWords || []).length} words`);
-      } catch (e) {
-        log(`❌ vocabData/list failed: ${e.message}`);
+      const vocabByLesson = data.vocabByLesson || {};
+      for (const lesson of Object.keys(vocabByLesson)) {
+        try {
+          await sdk.setDoc(sdk.doc(db, "vocabData", lesson), { lesson: Number(lesson), words: vocabByLesson[lesson] });
+          log(`✅ vocabData/${lesson}: seeded ${vocabByLesson[lesson].length} words`);
+        } catch (e) {
+          log(`❌ vocabData/${lesson} failed: ${e.message}`);
+        }
       }
 
       log("Done. You can now delete admin-seed-content.html and assets/content-seed-temp.js from the repo.");
