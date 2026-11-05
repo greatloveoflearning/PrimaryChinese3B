@@ -17,6 +17,7 @@
 
   const els = {
     setSelect: document.getElementById("set-select"),
+    previewHint: document.getElementById("preview-hint"),
     modeTabs: Array.from(document.querySelectorAll(".mode-tab")),
     studyView: document.getElementById("study-view"),
     matchView: document.getElementById("match-view"),
@@ -793,6 +794,7 @@
 
   function rebuildFromVocabData() {
     const user = window.vocabAuth && window.vocabAuth.getUser();
+    if (els.previewHint) els.previewHint.hidden = !!user;
     // Each word already carries a stable id ("<lesson>-<index>") baked in at
     // seed time — don't overwrite it with an array-position index, since
     // position shifts depending on which lessons happen to be loaded yet.
