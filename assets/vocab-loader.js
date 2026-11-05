@@ -58,7 +58,8 @@
   async function ensureAllLessons() {
     if (!currentUser) return;
     const ids = window.getAllLessonIds ? window.getAllLessonIds() : Object.keys(window.LESSON_META || {}).map(Number);
-    await Promise.all(ids.map((n) => ensureLesson(n)));
+    const realIds = ids.filter((n) => !(window.LESSON_META[n] && window.LESSON_META[n].allCategory));
+    await Promise.all(realIds.map((n) => ensureLesson(n)));
   }
 
   window.vocabLoader = { ensureLesson, ensureAllLessons };

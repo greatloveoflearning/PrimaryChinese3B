@@ -330,7 +330,8 @@
   // in one shot the moment someone signs in.
   async function ensureLoadedForValue(value) {
     if (!window.vocabLoader) return;
-    if (value === "all" || value === "mistakes") await window.vocabLoader.ensureAllLessons();
+    const isAggregate = window.LESSON_META[Number(value)] && window.LESSON_META[Number(value)].allCategory;
+    if (value === "all" || value === "mistakes" || isAggregate) await window.vocabLoader.ensureAllLessons();
     else await window.vocabLoader.ensureLesson(value);
   }
 

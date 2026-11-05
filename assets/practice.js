@@ -247,7 +247,8 @@
     lesson = els.lessonSelect.value;
     questionType = els.questionTypeSelect.value;
     if (window.vocabLoader) {
-      if (lesson === "all" || lesson === "mistakes") await window.vocabLoader.ensureAllLessons();
+      const isAggregate = window.LESSON_META[Number(lesson)] && window.LESSON_META[Number(lesson)].allCategory;
+      if (lesson === "all" || lesson === "mistakes" || isAggregate) await window.vocabLoader.ensureAllLessons();
       else await window.vocabLoader.ensureLesson(lesson);
     }
     targetCount = els.countSelect.value === "all" ? getPool().length : Number(els.countSelect.value);

@@ -469,7 +469,11 @@
     els.questionCard.hidden = !isPlaying;
     els.spectating.hidden = isPlaying;
     showView(els.running);
-    if (window.vocabLoader) await window.vocabLoader.ensureLesson(sessionData.lesson);
+    if (window.vocabLoader) {
+      const meta = window.LESSON_META[sessionData.lesson];
+      if (meta && meta.allCategory) await window.vocabLoader.ensureAllLessons();
+      else await window.vocabLoader.ensureLesson(sessionData.lesson);
+    }
     if (isPlaying) renderQuestion();
     renderRunningLeaderboard();
     startTimer();
