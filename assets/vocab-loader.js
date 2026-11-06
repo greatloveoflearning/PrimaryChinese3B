@@ -58,11 +58,21 @@
   async function ensureAllLessons() {
     if (!currentUser) return;
     const ids = window.getAllLessonIds ? window.getAllLessonIds() : Object.keys(window.LESSON_META || {}).map(Number);
-    const realIds = ids.filter((n) => !(window.LESSON_META[n] && window.LESSON_META[n].allCategory));
+    const realIds = ids.filter((n) => !(window.LESSON_META[n] && (window.LESSON_META[n].allCategory || window.LESSON_META[n].groupAggregate)));
     await Promise.all(realIds.map((n) => ensureLesson(n)));
   }
 
-  window.vocabLoader = { ensureLesson, ensureAllLessons };
+  // A "group aggregate" pseudo-lesson (e.g. "Lesson 10" standing in for its
+  // 10.1/10.2/... sub-lessons) has no Firestore document of its own — fetch
+  // just the real sub-lessons it covers instead of everything.
+  async function ensureLessonGroup(baseNum) {
+    if (!currentUser) return;
+    const ids = window.getAllLessonIds ? window.getAllLessonIds() : Object.keys(window.LESSON_META || {}).map(Number);
+    const groupIds = ids.filter((n) => n !== baseNum && Math.floor(n) === baseNum);
+    await Promise.all(groupIds.map((n) => ensureLesson(n)));
+  }
+
+  window.vocabLoader = { ensureLesson, ensureAllLessons, ensureLessonGroup };
 
   window.vocabAuth.onChange((user) => {
     currentUser = user;

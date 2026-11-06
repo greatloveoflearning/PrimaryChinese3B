@@ -134,7 +134,12 @@
   }
 
   function getLessons() {
-    return Array.from(new Set(getAllCards().map((c) => c.lesson))).sort((a, b) => a - b);
+    const ids = Array.from(new Set(getAllCards().map((c) => c.lesson)));
+    Object.keys(window.LESSON_META || {}).forEach((k) => {
+      const m = window.LESSON_META[k];
+      if (m.groupAggregate && !ids.includes(Number(k))) ids.push(Number(k));
+    });
+    return ids.sort((a, b) => a - b);
   }
 
   async function renderLessonBreakdown(uid, masteredIds) {
@@ -165,7 +170,7 @@
 
     els.lessonTableBody.innerHTML = "";
     for (const lesson of lessons) {
-      const cards = allCards.filter((c) => c.lesson === lesson);
+      const cards = window.getCardsForLessonValue(allCards, lesson);
       const mastered = cards.filter((c) => masteredSet.has(c.id)).length;
       let learners = "–";
       try {
@@ -968,7 +973,7 @@
       els.adminProgressBody.innerHTML = "";
       const rows = [];
       lessons.forEach((lesson) => {
-        const cards = allCards.filter((c) => c.lesson === lesson);
+        const cards = window.getCardsForLessonValue(allCards, lesson);
         const mastered = cards.filter((c) => masteredSet.has(c.id)).length;
         const match = matchMap[lesson] || 0;
         const t1 = practiceType1Map[lesson] || 0;

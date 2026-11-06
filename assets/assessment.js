@@ -474,6 +474,7 @@
     if (window.vocabLoader) {
       const meta = window.LESSON_META[sessionData.lesson];
       if (meta && meta.allCategory) await window.vocabLoader.ensureAllLessons();
+      else if (meta && meta.groupAggregate) await window.vocabLoader.ensureLessonGroup(sessionData.lesson);
       else await window.vocabLoader.ensureLesson(sessionData.lesson);
     }
     if (isPlaying) renderQuestion();
