@@ -1,9 +1,27 @@
 # Playbook: building a new grade/semester site from this template
 
-This repo (PrimaryChinese3B) was bootstrapped from 4B-Vocabulary and is
-itself meant to be the starting point for the next one (huawen3A,
-yuwen3B, etc.). Everything below is the exact process, including the
-mistakes made and how they were fixed, so the next build goes faster.
+This repo (PrimaryChinese3B / huawen3B) was bootstrapped from
+4B-Vocabulary and is itself the **master template for the 华文
+(Singapore MOE curriculum) branch** of this site family — the next 华文
+site (huawen3A, etc.) should be scaffolded from here, not from
+whichever sibling was touched most recently. (yuwen3B and future
+mainland 统编版 语文 sites instead scaffold from 4B-Vocabulary — that's
+a separate branch with its own master template.)
+
+**Read the `huawen-course-site-playbook` skill (`/Users/.../skills/
+huawen-course-site-playbook/SKILL.md` on whatever machine is running
+Claude Code, or just trigger it by saying "小学华文课程网站生成手册")
+first** — it captures everything specific to this branch: content
+sourcing (识字表/写字表 **must** come from the textbook's own official
+生字表 appendix photos, not from reading-article text — a real mistake
+made once and fixed), the 词语表 部分-based sub-lesson split with a
+combined "group aggregate" option layered on top, branding (新加坡小学
+华文学习平台, deep purple `#5b34d6`), and which features from the other
+branch still need to be ported over manually. The shared infrastructure
+(Firebase, GitHub Pages, Firestore schema, pinyin tokens, the seed-tool
+pattern) is identical to the other branch and lives in the
+`course-site-playbook` skill — everything below in this file is that
+shared material, inherited as-is from 4B-Vocabulary's version.
 
 ## 0. Decide: new repo, or reuse an existing one?
 
