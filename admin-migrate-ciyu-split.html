@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin: Split 词语表 into sub-lessons (L10.1 etc.)</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+  label { display: block; margin: 0.6rem 0 0.2rem; }
+  input { font: inherit; padding: 0.4rem 0.6rem; width: 100%; box-sizing: border-box; }
+  button { font: inherit; padding: 0.5rem 1rem; margin-top: 1rem; cursor: pointer; }
+  #log { white-space: pre-wrap; background: #f3f3f3; padding: 1rem; margin-top: 1rem; font-family: monospace; font-size: 0.85rem; max-height: 400px; overflow: auto; }
+</style>
+</head>
+<body>
+<h1>Admin: Split 词语表 into sub-lessons (Phase 1)</h1>
+<p>Writes 38 new <code>vocabData/{10.1 .. 17.5}</code> documents, splitting
+each lesson's 词语表 by the 部分 grouping from the original spreadsheet
+(e.g. L10 → 10.1/10.2/10.3/10.4/10.5), so students practice smaller batches
+instead of one 50-66 word lesson. Each word keeps its exact original id
+("10-0" etc.), so existing members' masteredIds keep resolving correctly —
+this just files the same words under new, smaller documents.</p>
+<p><strong>Does NOT touch or delete vocabData/10-17</strong> (the old
+whole-lesson docs) and does NOT change how the live site reads data — the
+current code keeps working unaffected until the follow-up code deploy
+switches to the new per-部分 structure. Delete this file (and
+<code>assets/ciyu-split-seed-temp.js</code>) once that deploy is confirmed
+working.</p>
+
+<div id="login-box">
+  <label>Email <input type="email" id="email"></label>
+  <label>Password <input type="password" id="password"></label>
+  <button id="login-btn">Sign in</button>
+</div>
+
+<div id="seed-box" hidden>
+  <p id="whoami"></p>
+  <button id="seed-btn">Write split 词语表 docs into Firestore</button>
+</div>
+
+<div id="log"></div>
+
+<script src="assets/vendor/firebase-vendor.js"></script>
+<script src="assets/firebase-config.js"></script>
+<script src="assets/firebase-init.js"></script>
+<script src="assets/ciyu-split-seed-temp.js"></script>
+<script>
+(function () {
+  "use strict";
+  const logEl = document.getElementById("log");
+  function log(msg) {
+    logEl.textContent += msg + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function ready() {
+    const { db, auth, sdk } = window.vocabFirebase || {};
+    if (!sdk) {
+      setTimeout(ready, 100);
+      return;
+    }
+
+    sdk.onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        document.getElementById("login-box").hidden = false;
+        document.getElementById("seed-box").hidden = true;
+        return;
+      }
+      const snap = await sdk.getDoc(sdk.doc(db, "users", user.uid));
+      const isAdmin = snap.exists() && snap.data().isAdmin === true;
+      if (!isAdmin) {
+        log(`Signed in as ${user.email}, but this account is not an admin.`);
+        return;
+      }
+      document.getElementById("login-box").hidden = true;
+      document.getElementById("seed-box").hidden = false;
+      document.getElementById("whoami").textContent = `Signed in as admin: ${user.email}`;
+    });
+
+    document.getElementById("login-btn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      try {
+        await sdk.signInWithEmailAndPassword(auth, email, password);
+        log(`Signed in as ${email}`);
+      } catch (e) {
+        log(`Sign-in failed: ${e.message}`);
+      }
+    });
+
+    document.getElementById("seed-btn").addEventListener("click", async () => {
+      document.getElementById("seed-btn").disabled = true;
+      const data = window.CIYU_SPLIT_SEED_DATA || {};
+      const ids = Object.keys(data);
+      let okCount = 0;
+      let failCount = 0;
+
+      for (const id of ids) {
+        try {
+          await sdk.setDoc(sdk.doc(db, "vocabData", id), { words: data[id] });
+          log(`✅ vocabData/${id}: seeded ${data[id].length} words`);
+          okCount++;
+        } catch (e) {
+          log(`❌ vocabData/${id} failed: ${e.message}`);
+          failCount++;
+        }
+      }
+
+      log(`Done: ${okCount}/${ids.length} ok, ${failCount} failed.`);
+      document.getElementById("seed-btn").disabled = false;
+    });
+  }
+  ready();
+})();
+</script>
+</body>
+</html>
